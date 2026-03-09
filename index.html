@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>高中数学可视化：极值点偏移专题</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22d3ee;
+      --accent-2: #a78bfa;
+      --good: #34d399;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 10% 10%, #1e293b, var(--bg) 40%);
+      line-height: 1.6;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    .hero {
+      padding: 24px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #0b1228, #111827);
+      border: 1px solid #334155;
+      margin-bottom: 20px;
+    }
+    .hero p { color: var(--muted); margin: 8px 0; }
+    .grid { display: grid; gap: 16px; }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .card {
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 16px;
+    }
+    canvas {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      background: #0b1022;
+      display: block;
+    }
+    .controls { display: grid; gap: 12px; margin-top: 10px; }
+    label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+    input[type="range"] { width: 100%; }
+    .value {
+      color: var(--text);
+      font-weight: 600;
+      margin-left: 4px;
+    }
+    .formula {
+      font-family: ui-monospace, Menlo, Consolas, monospace;
+      background: #0b1228;
+      border: 1px solid #334155;
+      padding: 8px 10px;
+      border-radius: 8px;
+      margin: 8px 0;
+      word-break: break-word;
+    }
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      margin-bottom: 8px;
+    }
+    ul { margin-top: 8px; }
+    .steps li { margin-bottom: 6px; }
+    .variant { border-left: 4px solid var(--accent-2); padding-left: 10px; margin: 10px 0; }
+    .quiz {
+      background: #0b1228;
+      border: 1px dashed #475569;
+      border-radius: 10px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    button {
+      cursor: pointer;
+      border: 1px solid #0ea5e9;
+      color: #e0f2fe;
+      background: linear-gradient(120deg, #0284c7, #2563eb);
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight: 700;
+    }
+    .tip { color: var(--good); font-weight: 600; }
+    footer { color: #94a3b8; font-size: 13px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>极值点偏移：从概念到题型变式（可视化）</h1>
+      <p>核心思想：如果原函数 <b>f(x)</b> 的极值点已知，那么经过平移、伸缩、翻折后，新的极值点可以“按规则搬家”。</p>
+      <p>本页按 <b>引入 → 基础题型 → 多变式</b> 组织，适合高二/高三函数压轴前的专题复习。</p>
+    </section>
+
+    <section class="grid grid-2">
+      <article class="card">
+        <span class="pill">1. 引入（直观看偏移）</span>
+        <p>取基准函数：<b>f(x) = x³ - 3x</b>，其极大点为 <b>(-1, 2)</b>，极小点为 <b>(1, -2)</b>。</p>
+        <p>构造新函数：<b>g(x) = f(x - p) + q</b>。拖动参数观察“极值点整体平移”。</p>
+        <canvas id="plot" width="520" height="360"></canvas>
+        <div class="controls">
+          <label>水平偏移 p（右移为正）
+            <input id="p" type="range" min="-4" max="4" value="1" step="0.1" />
+            <span>p = <span class="value" id="pVal">1</span></span>
+          </label>
+          <label>竖直偏移 q（上移为正）
+            <input id="q" type="range" min="-4" max="4" value="1" step="0.1" />
+            <span>q = <span class="value" id="qVal">1</span></span>
+          </label>
+        </div>
+        <div class="formula" id="currentFormula"></div>
+        <div class="tip" id="currentExtrema"></div>
+      </article>
+
+      <article class="card">
+        <span class="pill">2. 基础题型（必会模板）</span>
+        <h3>模板 A：已知原函数极值点，求平移后极值点</h3>
+        <div class="formula">若 f(x) 在 x = x₀ 处有极值，且 y₀ = f(x₀)，则 g(x)=f(x-p)+q 的对应极值点为 (x₀+p, y₀+q)。</div>
+        <ul class="steps">
+          <li>先锁定“原极值点坐标”。</li>
+          <li>看表达式中的 <b>x-p</b>：横坐标整体 <b>+p</b>。</li>
+          <li>看外面的 <b>+q</b>：纵坐标整体 <b>+q</b>。</li>
+          <li>最后代入并核对“极大/极小”类型是否改变（平移不会改变类型）。</li>
+        </ul>
+
+        <h3>模板 B：已知新极值点，反推参数</h3>
+        <div class="formula">比较坐标：x新 = x旧 + p，y新 = y旧 + q。列二元一次方程组即可求 p, q。</div>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:16px;">
+      <span class="pill">3. 多变式进阶（常见压轴变形）</span>
+
+      <div class="variant">
+        <h3>变式 1：含伸缩与翻折</h3>
+        <div class="formula">g(x)=A·f(B(x-p))+q</div>
+        <ul>
+          <li>x方向：先由 B 造成横向伸缩，再由 p 平移；当 B&lt;0 时关于竖直线 x=p 发生左右翻折。</li>
+          <li>y方向：由 A 造成纵向伸缩；A&lt;0 时极大/极小互换，再整体上移 q。</li>
+        </ul>
+      </div>
+
+      <div class="variant">
+        <h3>变式 2：参数范围题</h3>
+        <p>常见问法：两极值点都落在某区间内、极值和差满足不等式、极值点到某直线距离最小等。核心仍是先把新极值点坐标写成参数表达式，再做不等式约束。</p>
+      </div>
+
+      <div class="variant">
+        <h3>变式 3：与导数联动</h3>
+        <p>若题目不给原极值点，可先用 f'(x)=0 求出原极值点，再套“偏移映射”一步到位。导数负责“找点”，偏移负责“搬点”。</p>
+      </div>
+
+      <div class="quiz" id="quizBox">
+        <h3>随机练习（点击生成）</h3>
+        <p id="quizQ">点击按钮生成一道“极值点偏移”题。</p>
+        <p id="quizA" style="color:#7dd3fc;"></p>
+        <button id="genBtn">生成新题</button>
+      </div>
+    </section>
+
+    <footer>
+      说明：本页面用于教学可视化演示“极值点偏移”思想，便于从概念理解过渡到题型训练。
+    </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plot');
+    const ctx = canvas.getContext('2d');
+    const pInput = document.getElementById('p');
+    const qInput = document.getElementById('q');
+    const pVal = document.getElementById('pVal');
+    const qVal = document.getElementById('qVal');
+    const currentFormula = document.getElementById('currentFormula');
+    const currentExtrema = document.getElementById('currentExtrema');
+
+    const W = canvas.width;
+    const H = canvas.height;
+    const xMin = -6, xMax = 6, yMin = -6, yMax = 6;
+
+    function f(x) {
+      return x * x * x - 3 * x;
+    }
+
+    function mapX(x) { return (x - xMin) / (xMax - xMin) * W; }
+    function mapY(y) { return H - (y - yMin) / (yMax - yMin) * H; }
+
+    function drawAxes() {
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(mapX(xMin), mapY(0));
+      ctx.lineTo(mapX(xMax), mapY(0));
+      ctx.moveTo(mapX(0), mapY(yMin));
+      ctx.lineTo(mapX(0), mapY(yMax));
+      ctx.stroke();
+    }
+
+    function drawCurve(fn, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      let first = true;
+      for (let x = xMin; x <= xMax; x += 0.02) {
+        const y = fn(x);
+        const X = mapX(x), Y = mapY(y);
+        if (first) { ctx.moveTo(X, Y); first = false; }
+        else { ctx.lineTo(X, Y); }
+      }
+      ctx.stroke();
+    }
+
+    function dot(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(mapX(x), mapY(y), 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function render() {
+      const p = parseFloat(pInput.value);
+      const q = parseFloat(qInput.value);
+
+      pVal.textContent = p.toFixed(1);
+      qVal.textContent = q.toFixed(1);
+
+      ctx.clearRect(0, 0, W, H);
+      drawAxes();
+
+      const g = (x) => f(x - p) + q;
+      drawCurve(f, '#a78bfa');
+      drawCurve(g, '#22d3ee');
+
+      const baseMax = { x: -1, y: 2 };
+      const baseMin = { x: 1, y: -2 };
+      const newMax = { x: baseMax.x + p, y: baseMax.y + q };
+      const newMin = { x: baseMin.x + p, y: baseMin.y + q };
+
+      dot(baseMax.x, baseMax.y, '#c4b5fd');
+      dot(baseMin.x, baseMin.y, '#c4b5fd');
+      dot(newMax.x, newMax.y, '#67e8f9');
+      dot(newMin.x, newMin.y, '#67e8f9');
+
+      currentFormula.textContent = `当前函数：g(x) = f(x - ${p.toFixed(1)}) + ${q.toFixed(1)}`;
+      currentExtrema.textContent = `新极大点约为 (${newMax.x.toFixed(1)}, ${newMax.y.toFixed(1)}), 新极小点约为 (${newMin.x.toFixed(1)}, ${newMin.y.toFixed(1)})`;
+    }
+
+    pInput.addEventListener('input', render);
+    qInput.addEventListener('input', render);
+    render();
+
+    const quizQ = document.getElementById('quizQ');
+    const quizA = document.getElementById('quizA');
+    const genBtn = document.getElementById('genBtn');
+
+    function randInt(a, b) {
+      return Math.floor(Math.random() * (b - a + 1)) + a;
+    }
+
+    genBtn.addEventListener('click', () => {
+      const p = randInt(-4, 4);
+      const q = randInt(-4, 4);
+      quizQ.textContent = `已知 f(x)=x³-3x 的极大点为(-1,2)、极小点为(1,-2)。若 g(x)=f(x-${p})+${q}，求 g(x) 的两个极值点。`;
+      const maxX = -1 + p, maxY = 2 + q;
+      const minX = 1 + p, minY = -2 + q;
+      quizA.textContent = `答案：极大点(${maxX}, ${maxY})，极小点(${minX}, ${minY})。`;
+    });
+  </script>
+</body>
+</html>
